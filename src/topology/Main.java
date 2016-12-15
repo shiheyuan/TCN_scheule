@@ -80,13 +80,26 @@ public class Main {
 
 	}
 
-	public static void checkOverlap(List<Dataflow> dataflows) {
+	/**
+	 * 
+	 * @param dataflows
+	 * @return overlap的Edge数
+	 */
+	public static int checkOverlap(List<Dataflow> dataflows) {
 		Map<Edge, Integer> edgeCounter = new HashMap<>();
 		for (Dataflow dataflow : dataflows) {
 			for (Edge edge : dataflow.edges) {
 				edgeCounter.put(edge, edgeCounter.get(edge));
 			}
-
 		}
+		int overlapCount = 0;
+		for (int usedCount : edgeCounter.values()) {
+			if (usedCount > 1) {
+				// 如果一条边被使用了n+1次，就存在n(n-1)对儿冲突
+				int n = usedCount - 1;
+				overlapCount += n * n + 1;
+			}
+		}
+		return overlapCount;
 	}
 }
