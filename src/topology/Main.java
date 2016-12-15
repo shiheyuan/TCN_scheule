@@ -96,6 +96,8 @@ public class Main {
 		for (int usedCount : edgeCounter.values()) {
 			if (usedCount > 1) {
 				// 如果一条边被使用了n+1次，就存在n(n-1)对儿冲突
+				// 這裡我需要再想想，也许直接统计重复dataflow数量比较好
+				// 比如1-》2，有三条dataflow同时占用，则此段edge有3-1=2次违反规则
 				int n = usedCount - 1;
 				overlapCount += n * n + 1;
 			}

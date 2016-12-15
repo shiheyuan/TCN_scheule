@@ -22,7 +22,7 @@ public class Dataflow {
 		int maxLevel = maxNodeList.size();
 		Random random = new Random();
 		duration = 1;
-		period = (int) Math.pow(2, random.nextInt(11));
+		period = (int) Math.pow(2, 1 + random.nextInt(10));
 		do {
 			// randomly synthesize source and destination nodes
 			int srcLev = 1 + random.nextInt(maxLevel);
