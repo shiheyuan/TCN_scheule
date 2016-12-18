@@ -7,11 +7,12 @@ import java.util.List;
 import java.util.Map;
 
 import requirement.Dataflow;
+import requirement.DataflowSchedule;
 
 public class Main {
 
 	public static void main(String[] args) {
-		int flowNum = 10;
+		int flowNum = 1;
 		int levNum = 3;
 		Integer[] level = new Integer[levNum];
 		level[0] = 4;
@@ -28,6 +29,9 @@ public class Main {
 			dataflow.edges = route(dataflow.sender, dataflow.receive);
 			System.out.println(dataflow);
 		}
+		Dataflow dataflow = dataflows.get(0);
+		DataflowSchedule dataflowSchedule = new DataflowSchedule( 16, 1, dataflow);
+		System.out.println(dataflowSchedule);
 	}
 
 	public static List<Edge> route(List<Integer> src, List<Integer> dst) {
@@ -97,7 +101,7 @@ public class Main {
 			if (usedCount > 1) {
 				// 如果一条边被使用了n+1次，就存在n(n-1)对儿冲突
 				// 這裡我需要再想想，也许直接统计重复dataflow数量比较好
-				// 比如1-》2，有三条dataflow同时占用，则此段edge有3-1=2次违反规则
+				// 比如1->2，有三条dataflow同时占用，则此段edge有3-1=2次违反规则
 				int n = usedCount - 1;
 				overlapCount += n * n + 1;
 			}
