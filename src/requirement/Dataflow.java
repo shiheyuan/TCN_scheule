@@ -14,8 +14,8 @@ import topology.Edge;
 public class Dataflow {
 	@Override
 	public String toString() {
-		return "Dataflow [edges=" + edges + ", launch=" + launch + ", duration=" + duration + ", period=" + period
-				+ "]\n";
+		return "Dataflow [sender=" + sender + ", receive=" + receive + ", launch=" + launch + ", duration=" + duration
+				+ ", period=" + period + ", maxLaunch=" + maxLaunch + "]";
 	}
 
 	public List<Integer> sender = new ArrayList<>();
@@ -23,43 +23,44 @@ public class Dataflow {
 	public List<Edge> edges;
 
 	public int launch;
-	private int duration;
-	private int period;
+	public int duration;
+	public int period;
 	public int maxLaunch;
-	// public List<Boolean> communiInfo = new ArrayList<>();
 
 	/**
 	 * 
 	 * @param maxNodePerLev
 	 *            各个level的最大节点数
 	 */
-	public Dataflow(List<Integer> maxNodePerLev) {
-		int maxLevel = maxNodePerLev.size();
+	public Dataflow(List<Integer> maxNodePerLev, int maxPeriod) {
+		// 拓扑层数
 		Random random = new Random();
 		duration = 1;
-		period = (int) Math.pow(2, 1 + random.nextInt(10));
-		maxLaunch = period - duration;
+		period = (int) Math.pow(2, 1 + random.nextInt(maxPeriod));
+		maxLaunch = period - duration + 1;
+		launch = random.nextInt(maxLaunch);
 		do {
-			// randomly synthesize source and destination nodes
-			int srcLev = 1 + random.nextInt(maxLevel);
-			for (int i = 0; i < srcLev; i++) {
-				sender.add(random.nextInt(maxNodePerLev.get(i)));
-			}
-			int dstLev = 1 + random.nextInt(maxLevel);
-			for (int i = 0; i < dstLev; i++) {
-				receive.add(random.nextInt(maxNodePerLev.get(i)));
-			}
+			sender = initialNode(maxNodePerLev);
+			receive = initialNode(maxNodePerLev);
 		} while (sender.equals(receive) == true);
 	}
 
-	public List<Boolean> forwardSlot(int start, int hyperPeriod) {
-		List<Boolean> list = new ArrayList<>();
-		int times = hyperPeriod / period;
-		for (int i = 0; i < times; i++) {
-
+	/**
+	 * 初始化节点
+	 * 
+	 * @param topo
+	 *            拓扑结构
+	 * @return 节点编号
+	 */
+	private static List<Integer> initialNode(List<Integer> topo) {
+		List<Integer> list = new ArrayList<>();
+		int maxLev = topo.size();
+		Random random = new Random();
+		int nodeLev = random.nextInt(maxLev);
+		for (int i = 0; i <= nodeLev; i++) {
+			list.add(random.nextInt(topo.get(i)));
 		}
-		return null;
-
+		return list;
 	}
 
 }
