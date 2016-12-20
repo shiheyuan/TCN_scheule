@@ -7,5 +7,6 @@
 			<attribute name="javadoc_location" value="http://jenetics.io/javadoc/org.jenetics/3.6/index.html"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="org.jenetics.tool-3.6.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
