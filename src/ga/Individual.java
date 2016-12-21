@@ -2,10 +2,12 @@ package ga;
 
 import org.jenetics.IntegerChromosome;
 
-public class Chromosome {
-	IntegerChromosome integerChromosome;
+public class Individual {
+	public IntegerChromosome integerChromosome;
 
-	public Chromosome() {
+	public int val;
 
+	public Individual(int len) {
+		integerChromosome = new IntegerChromosome(0, 10, len);
 	}
 }
