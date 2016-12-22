@@ -53,7 +53,7 @@ public class StringGenerator {
 	}
 
 	public static void main(String[] args) throws Exception {
-		final CharSeq chars = CharSeq.of("a-z");
+		final CharSeq chars = CharSeq.of("A-z");
 		final Factory<Genotype<CharacterGene>> gtf = Genotype
 				.of(new CharacterChromosome(chars, TARGET_STRING.length()));
 

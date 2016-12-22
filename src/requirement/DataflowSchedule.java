@@ -8,7 +8,7 @@ public class DataflowSchedule {
 	public Dataflow dataflow;
 	public int startU;
 
-	public List<Boolean> timeSlot = new ArrayList<>();
+	public List<Boolean> timeSlot;
 	// public List<Integer> timeline = new ArrayList<>();
 
 	/**
@@ -20,6 +20,7 @@ public class DataflowSchedule {
 	public DataflowSchedule(int hyper, int unit, Dataflow dataflow) {
 		this.dataflow = dataflow;
 		int slotNum = hyper / unit;
+		timeSlot = new ArrayList<>();
 		for (int i = 0; i < slotNum; i++) {
 			timeSlot.add(false);
 		}

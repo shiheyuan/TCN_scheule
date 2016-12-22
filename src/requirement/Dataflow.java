@@ -1,6 +1,7 @@
 package requirement;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -14,17 +15,17 @@ import topology.Edge;
 public class Dataflow {
 	@Override
 	public String toString() {
-		return "Dataflow [sender=" + sender + ", receive=" + receive + ", launch=" + launch + ", duration=" + duration
-				+ ", period=" + period + ", maxLaunch=" + maxLaunch + "]";
+		return "Dataflow [duration=" + duration + ", period=" + period + ", maxLaunch=" + maxLaunch + "]";
 	}
 
 	public List<Integer> sender = new ArrayList<>();
 	public List<Integer> receive = new ArrayList<>();
 	public List<Edge> edges;
 
-	public int launch;
+	// public int launch;
 	public int duration;
 	public int period;
+	// max slot
 	public int maxLaunch;
 
 	/**
@@ -37,12 +38,45 @@ public class Dataflow {
 		Random random = new Random();
 		duration = 1;
 		period = (int) Math.pow(2, 1 + random.nextInt(maxPeriod));
-		maxLaunch = period - duration + 1;
-		launch = random.nextInt(maxLaunch);
+		maxLaunch = period - duration;
+		// launch = random.nextInt(maxLaunch);
 		do {
 			sender = initialNode(maxNodePerLev);
 			receive = initialNode(maxNodePerLev);
 		} while (sender.equals(receive) == true);
+	}
+
+	public List<Boolean> getExist(int start, int hyper, int unit) {
+		int slotNum = hyper / unit;
+		// 参数标准化
+		int periodU = period / unit;
+		int durationU = duration / unit;
+		// 宏周期内该数据流出现次数
+		int times = hyper / period;
+
+		// Random random = new Random();
+		// int startU = random.nextInt(periodU - durationU);
+		int startU = start / unit;
+
+		Boolean[] slot = new Boolean[slotNum];
+		for (int i = 0; i < times; i++) {
+			for (int j = 0; j < durationU; j++) {
+				slot[i * periodU + startU + j] = true;
+			}
+		}
+		// for (int i = 0; i < times; i++) {
+		// for (int j = 0; j < durationU; j++) {
+		// // timeSlot.set(i * periodU + j + startU, true);
+		// // timeline.add(i * periodU + j + startU);
+		// if (temp == (i * periodU + (startU + j))) {
+		// timeSlot.add(true);
+		// } else {
+		// timeSlot.add(false);
+		// }
+		// temp++;
+		// }
+		// }
+		return Arrays.asList(slot);
 	}
 
 	/**

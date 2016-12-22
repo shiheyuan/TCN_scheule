@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import requirement.DataSet;
 import requirement.Dataflow;
 import requirement.DataflowSchedule;
 import utils.Util;
@@ -15,11 +16,15 @@ public class Main {
 		// 数据流数量
 		int flowNum = 5;
 		// 最大数据流周期
-		int maxPeriod = 1;
+		int maxPeriod = 3;
 		// 拓扑结构
 		List<Integer> topoConfig = new ArrayList<>();
-		topoConfig.add(0, 1);
-		topoConfig.add(1, 1);
+		topoConfig.add(0, 8);
+		topoConfig.add(1, 4);
+
+		DataSet dataSet = new DataSet(flowNum, maxPeriod, topoConfig);
+		System.out.println(dataSet);
+
 		// 初始化数据流
 		List<Dataflow> dataflows = initialDataflows(flowNum, maxPeriod, topoConfig);
 		// 初始化数据流调度
@@ -27,11 +32,19 @@ public class Main {
 		int unit = Util.getUnit(dataflows);
 		// 数据流调度参数：宏周期，调度单元
 		System.out.println(hyper + "\t" + unit);
-		List<DataflowSchedule> dataflowSchedules = iniDataSche(dataflows, hyper, unit);
-		System.out.println(dataflowSchedules);
-		// 适应度
-		int feasibility = violate(dataflowSchedules);
-		System.out.println(feasibility);
+
+		for (Dataflow dataflow : dataflows) {
+			List<Boolean> list = dataflow.getExist(1, hyper, unit);
+			// System.out.println(dataflow);
+			// System.out.println(list);
+		}
+
+		// List<DataflowSchedule> dataflowSchedules = iniDataSche(dataflows,
+		// hyper, unit);
+		// System.out.println(dataflowSchedules);
+		// // 适应度
+		// int feasibility = violate(dataflowSchedules);
+		// System.out.println(feasibility);
 	}
 
 	public static int violate(List<DataflowSchedule> dataflowSchedules) {
@@ -200,7 +213,7 @@ public class Main {
 		// overlapCount += n * n + 1;
 		// }
 		// }
-		System.out.println(edgeCounter);
+		// System.out.println(edgeCounter);
 		return overlapCount;
 	}
 }
