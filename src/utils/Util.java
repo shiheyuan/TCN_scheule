@@ -1,49 +1,6 @@
 package utils;
 
-import java.util.List;
-
-import requirement.Dataflow;
-
 public class Util {
-	/**
-	 * 求宏周期
-	 * 
-	 * @param dataflows
-	 * @return 宏周期数值
-	 */
-	public static int getHyper(List<Dataflow> dataflows) {
-		int hyper = -1;
-		boolean flag = false;
-		for (Dataflow dataflow : dataflows) {
-			if (!flag) {
-				hyper = dataflow.period;
-				flag = true;
-			} else {
-				hyper = Math.max(hyper, dataflow.period);
-			}
-		}
-		return hyper;
-	}
-
-	/**
-	 * 求调度单元数值
-	 * 
-	 * @param dataflows
-	 * @return
-	 */
-	public static int getUnit(List<Dataflow> dataflows) {
-		int unit = -1;
-		boolean flag = false;
-		for (Dataflow dataflow : dataflows) {
-			if (!flag) {
-				unit = dataflow.period;
-				flag = true;
-			} else {
-				unit = Math.min(unit, dataflow.duration);
-			}
-		}
-		return unit;
-	}
 
 	// great common division
 	public static long gcd(long m, long n) {

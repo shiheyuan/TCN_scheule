@@ -23,7 +23,6 @@ import static org.jenetics.engine.EvolutionResult.toBestPhenotype;
 import static org.jenetics.engine.limit.bySteadyFitness;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -50,16 +49,11 @@ import requirement.Dataflow;
  * @since 1.0
  * @version 3.5
  */
-
-// The fitness function.
 final class Fitness implements Function<Genotype<IntegerGene>, Integer> {
 	private final DataSet dataSet;
-	private final int maxNodeNum;
-	// private final int value;
 
 	public Fitness(DataSet dataSet, int maxNodeNum) {
 		this.dataSet = dataSet;
-		this.maxNodeNum = maxNodeNum;
 	}
 
 	@Override
@@ -68,7 +62,6 @@ final class Fitness implements Function<Genotype<IntegerGene>, Integer> {
 		int hyper = dataSet.hyper;
 		int unit = dataSet.unit;
 		int slot = hyper / unit;
-		int score = maxNodeNum * slot;
 		// [数据流][时间片]
 		Boolean[][] coexist = new Boolean[dataflows.size()][slot];
 		for (int i = 0; i < integerChromosome.length(); i++) {
@@ -81,8 +74,12 @@ final class Fitness implements Function<Genotype<IntegerGene>, Integer> {
 		// for (Boolean[] bs : coexist) {
 		// System.out.println(Arrays.asList(bs));
 		// }
+		int beReserve = 0;
+		int overlap = 0;
+
 		// 对每一时刻
 		for (int i = 0; i < coexist[0].length; i++) {
+			// 当前时刻的共存数据流序列
 			List<Dataflow> coFlowInSlot = new ArrayList<>();
 			// 对每条数据流
 			for (int j = 0; j < coexist.length; j++) {
@@ -90,44 +87,55 @@ final class Fitness implements Function<Genotype<IntegerGene>, Integer> {
 					coFlowInSlot.add(dataflows.get(j));
 				}
 			}
-			score = score - topology.Main.checkOverlap(coFlowInSlot);
+			if (coFlowInSlot.isEmpty()) {
+				beReserve++;
+			}
+			// 关键fitness function
+			overlap += topology.FlowUtil.checkOverlap(coFlowInSlot);
 		}
+		int score = beReserve - overlap;
 		return score;
 	}
 
 }
+
+// The fitness function.
 
 public class GTS {
 	public static void main(String[] args) {
 		// 数据流数量
 		final int flowNum = 50;
 		// 最大数据流周期
-		final int maxPeriod = 5;
+		final int minPeriod = 5;
+		final int maxPeriod = 10;
 		// 拓扑结构
 		List<Integer> topoConfig = new ArrayList<>();
 		topoConfig.add(0, 8);
-		topoConfig.add(1, 4);
+		topoConfig.add(1, 24);
 		int maxNodeNum = topoConfig.get(0) * topoConfig.get(1);
-		DataSet dataSet = new DataSet(flowNum, maxPeriod, topoConfig);
-		System.out.println(dataSet);
+		DataSet dataSet = new DataSet(flowNum, minPeriod, maxPeriod, topoConfig);
 
 		// 染色体初始化,随机生成符合时间约束的发出时间
 		List<Integer> maxPhaseList = new ArrayList<>();
 		final IntegerGene[] genes = new IntegerGene[flowNum];
+
+		// 用integerGene or genoType
 		for (int i = 0; i < genes.length; i++) {
 			int maxPhase = dataSet.dataflows.get(i).maxLaunch;
-			maxPhaseList.add(maxPhase);
 			genes[i] = IntegerGene.of(0, maxPhase);
+			maxPhaseList.add(maxPhase);
 		}
-
-		List<IntegerChromosome> lic = maxPhaseList.stream().map((integer) -> IntegerChromosome.of(0, integer, 1))
+		// genoType
+		final List<IntegerChromosome> lic = maxPhaseList.stream().map((integer) -> IntegerChromosome.of(0, integer, 1))
 				.collect(Collectors.toList());
-		Genotype<IntegerGene> gt = Genotype.of(lic);
-		IntegerChromosome integerChromosome = IntegerChromosome.of(genes);
-		System.out.println(gt);
-		System.out.println(Arrays.asList(genes));
+		final Genotype<IntegerGene> gt = Genotype.of(lic);
+
+		// IntegerChromosome
+		// IntegerChromosome integerChromosome = IntegerChromosome.of(genes);
+
 		final Fitness ff = new Fitness(dataSet, maxNodeNum);
-		final Engine<IntegerGene, Integer> engine = Engine.builder(ff, Genotype.of(gt)).populationSize(10)
+
+		final Engine<IntegerGene, Integer> engine = Engine.builder(ff, gt).populationSize(500)
 				.survivorsSelector(new TournamentSelector<>(3)).offspringSelector(new RouletteWheelSelector<>())
 				.alterers(new Mutator<>(0.5), new SinglePointCrossover<>(0.6)).build();
 		// Create evolution statistics consumer.
@@ -146,10 +154,83 @@ public class GTS {
 				// Collect (reduce) the evolution stream to
 				// its best phenotype.
 				.collect(toBestPhenotype());
+		Genotype<IntegerGene> res = best.getGenotype();
 
 		System.out.println(statistics);
-		System.out.println(maxNodeNum * Math.pow(2, maxPeriod));
-		System.out.println(best);
+		// 检查结果
+		System.out.println("grain:\t" + dataSet.getFrain());
+		System.out.println("slot:\t" + dataSet.hyper);
+		System.out.println("be:\t" + beResev(dataSet, res));
+		System.out.println("vio:\t" + overlap(dataSet, res));
 	}
 
+	public static int overlap(DataSet dataSet, Genotype<IntegerGene> integerChromosome) {
+		List<Dataflow> dataflows = dataSet.dataflows;
+		int hyper = dataSet.hyper;
+		int unit = dataSet.unit;
+		int slot = hyper / unit;
+		// [数据流][时间片]
+		Boolean[][] coexist = new Boolean[dataflows.size()][slot];
+		for (int i = 0; i < integerChromosome.length(); i++) {
+			int phase = integerChromosome.get(i, 0).intValue();
+			Dataflow dataflow = dataflows.get(i);
+			List<Boolean> exist = dataflow.getExist(phase, hyper, unit);
+			exist.toArray(coexist[i]);
+		}
+
+		int overlap = 0;
+
+		// 对每一时刻
+		for (int i = 0; i < coexist[0].length; i++) {
+			// 当前时刻的共存数据流序列
+			List<Dataflow> coFlowInSlot = new ArrayList<>();
+			// 对每条数据流
+			for (int j = 0; j < coexist.length; j++) {
+				if (coexist[j][i] != null) {
+					coFlowInSlot.add(dataflows.get(j));
+				}
+			}
+			if (coFlowInSlot.isEmpty()) {
+			}
+			// 关键fitness function
+			overlap += topology.FlowUtil.checkOverlap(coFlowInSlot);
+		}
+		return overlap;
+	}
+
+	public static int beResev(DataSet dataSet, Genotype<IntegerGene> integerChromosome) {
+		List<Dataflow> dataflows = dataSet.dataflows;
+		int hyper = dataSet.hyper;
+		int unit = dataSet.unit;
+		int slot = hyper / unit;
+		// [数据流][时间片]
+		Boolean[][] coexist = new Boolean[dataflows.size()][slot];
+		for (int i = 0; i < integerChromosome.length(); i++) {
+			int phase = integerChromosome.get(i, 0).intValue();
+			Dataflow dataflow = dataflows.get(i);
+			List<Boolean> exist = dataflow.getExist(phase, hyper, unit);
+			exist.toArray(coexist[i]);
+		}
+
+		// for (Boolean[] bs : coexist) {
+		// System.out.println(Arrays.asList(bs));
+		// }
+		int beReserve = 0;
+		// 对每一时刻
+		for (int i = 0; i < coexist[0].length; i++) {
+			// 当前时刻的共存数据流序列
+			List<Dataflow> coFlowInSlot = new ArrayList<>();
+			// 对每条数据流
+			for (int j = 0; j < coexist.length; j++) {
+				if (coexist[j][i] != null) {
+					coFlowInSlot.add(dataflows.get(j));
+				}
+			}
+			if (coFlowInSlot.isEmpty()) {
+				beReserve++;
+			}
+			topology.FlowUtil.checkOverlap(coFlowInSlot);
+		}
+		return beReserve;
+	}
 }

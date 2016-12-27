@@ -15,7 +15,7 @@ import topology.Edge;
 public class Dataflow {
 	@Override
 	public String toString() {
-		return "Dataflow [duration=" + duration + ", period=" + period + ", maxLaunch=" + maxLaunch + "]";
+		return "Dataflow [period=" + period + "]";
 	}
 
 	public List<Integer> sender = new ArrayList<>();
@@ -33,11 +33,11 @@ public class Dataflow {
 	 * @param maxNodePerLev
 	 *            各个level的最大节点数
 	 */
-	public Dataflow(List<Integer> maxNodePerLev, int maxPeriod) {
+	public Dataflow(List<Integer> maxNodePerLev, int minPeriod, int maxPeriod) {
 		// 拓扑层数
 		Random random = new Random();
 		duration = 1;
-		period = (int) Math.pow(2, 1 + random.nextInt(maxPeriod));
+		period = (int) Math.pow(2, minPeriod + random.nextInt(maxPeriod - minPeriod));
 		maxLaunch = period - duration;
 		// launch = random.nextInt(maxLaunch);
 		do {

@@ -2,8 +2,7 @@ package requirement;
 
 import java.util.List;
 
-import topology.Main;
-import utils.Util;
+import topology.FlowUtil;
 
 public class DataSet {
 	@Override
@@ -15,9 +14,19 @@ public class DataSet {
 	public int hyper;
 	public int unit;
 
-	public DataSet(int flowNum, int maxPeriod, List<Integer> topoConfig) {
-		this.dataflows = Main.initialDataflows(flowNum, maxPeriod, topoConfig);
-		this.hyper = Util.getHyper(dataflows);
-		this.unit = Util.getUnit(dataflows);
+	public DataSet(int flowNum, int minPeriod, int maxPeriod, List<Integer> topoConfig) {
+		this.dataflows = FlowUtil.initialDataflows(flowNum, minPeriod, maxPeriod, topoConfig);
+		this.hyper = FlowUtil.getHyper(dataflows);
+		this.unit = FlowUtil.getUnit(dataflows);
 	}
+
+	public int getFrain() {
+		int frain = 0;
+		for (Dataflow dataflow : dataflows) {
+			frain += hyper / dataflow.period * dataflow.duration;
+		}
+		return frain;
+
+	}
+
 }
