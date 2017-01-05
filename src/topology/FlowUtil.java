@@ -249,7 +249,7 @@ public class FlowUtil {
 		boolean flag = false;
 		for (Dataflow dataflow : dataflows) {
 			if (!flag) {
-				unit = dataflow.period;
+				unit = dataflow.duration;
 				flag = true;
 			} else {
 				unit = Math.min(unit, dataflow.duration);

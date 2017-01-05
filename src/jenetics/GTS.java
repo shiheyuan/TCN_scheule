@@ -93,7 +93,7 @@ final class Fitness implements Function<Genotype<IntegerGene>, Integer> {
 			// 关键fitness function
 			overlap += topology.FlowUtil.checkOverlap(coFlowInSlot);
 		}
-		int score = beReserve - overlap;
+		int score = beReserve - 10 * overlap;
 		return score;
 	}
 
@@ -102,66 +102,14 @@ final class Fitness implements Function<Genotype<IntegerGene>, Integer> {
 // The fitness function.
 
 public class GTS {
-	public static void main(String[] args) {
-		// 数据流数量
-		final int flowNum = 50;
-		// 最大数据流周期
-		final int minPeriod = 5;
-		final int maxPeriod = 10;
-		// 拓扑结构
-		List<Integer> topoConfig = new ArrayList<>();
-		topoConfig.add(0, 8);
-		topoConfig.add(1, 24);
-		int maxNodeNum = topoConfig.get(0) * topoConfig.get(1);
-		DataSet dataSet = new DataSet(flowNum, minPeriod, maxPeriod, topoConfig);
-
-		// 染色体初始化,随机生成符合时间约束的发出时间
-		List<Integer> maxPhaseList = new ArrayList<>();
-		final IntegerGene[] genes = new IntegerGene[flowNum];
-
-		// 用integerGene or genoType
-		for (int i = 0; i < genes.length; i++) {
-			int maxPhase = dataSet.dataflows.get(i).maxLaunch;
-			genes[i] = IntegerGene.of(0, maxPhase);
-			maxPhaseList.add(maxPhase);
+	public static int minBeSlot(DataSet dataSet) {
+		int hyper = dataSet.hyper;
+		int sum = 0;
+		List<Dataflow> list = dataSet.dataflows;
+		for (Dataflow dataflow : list) {
+			sum += hyper / dataflow.period * dataflow.duration;
 		}
-		// genoType
-		final List<IntegerChromosome> lic = maxPhaseList.stream().map((integer) -> IntegerChromosome.of(0, integer, 1))
-				.collect(Collectors.toList());
-		final Genotype<IntegerGene> gt = Genotype.of(lic);
-
-		// IntegerChromosome
-		// IntegerChromosome integerChromosome = IntegerChromosome.of(genes);
-
-		final Fitness ff = new Fitness(dataSet, maxNodeNum);
-
-		final Engine<IntegerGene, Integer> engine = Engine.builder(ff, gt).populationSize(500)
-				.survivorsSelector(new TournamentSelector<>(3)).offspringSelector(new RouletteWheelSelector<>())
-				.alterers(new Mutator<>(0.5), new SinglePointCrossover<>(0.6)).build();
-		// Create evolution statistics consumer.
-		final Consumer<? super EvolutionResult<IntegerGene, Integer>> statistics = EvolutionStatistics.ofNumber();
-
-		final Phenotype<IntegerGene, Integer> best = engine.stream()
-				// Truncate the evolution stream after 7 "steady"
-				// generations.
-				.limit(bySteadyFitness(10))
-				// The evolution will stop after maximal 100
-				// generations.
-				.limit(100)
-				// Update the evaluation statistics after
-				// each generation
-				.peek(statistics)
-				// Collect (reduce) the evolution stream to
-				// its best phenotype.
-				.collect(toBestPhenotype());
-		Genotype<IntegerGene> res = best.getGenotype();
-
-		System.out.println(statistics);
-		// 检查结果
-		System.out.println("grain:\t" + dataSet.getFrain());
-		System.out.println("slot:\t" + dataSet.hyper);
-		System.out.println("be:\t" + beResev(dataSet, res));
-		System.out.println("vio:\t" + overlap(dataSet, res));
+		return hyper - sum;
 	}
 
 	public static int overlap(DataSet dataSet, Genotype<IntegerGene> integerChromosome) {
@@ -233,4 +181,76 @@ public class GTS {
 		}
 		return beReserve;
 	}
+
+	public static void main(String[] args) {
+		// 数据流数量
+		final int flowNum = 50;
+		// 最大数据流周期
+		final int minPeriod = 4;
+		final int maxPeriod = 10;
+		// 拓扑结构
+		List<Integer> topoConfig = new ArrayList<>();
+		topoConfig.add(0, 8);
+		topoConfig.add(1, 8);
+		int maxNodeNum = topoConfig.get(0) * topoConfig.get(1);
+		DataSet dataSet = new DataSet(flowNum, minPeriod, maxPeriod, topoConfig);
+
+		// 染色体初始化,随机生成符合时间约束的发出时间
+		List<Integer> maxPhaseList = new ArrayList<>();
+		final IntegerGene[] genes = new IntegerGene[flowNum];
+
+		// 用integerGene or genoType
+		for (int i = 0; i < genes.length; i++) {
+			int maxPhase = dataSet.dataflows.get(i).maxLaunch;
+			genes[i] = IntegerGene.of(0, maxPhase);
+			maxPhaseList.add(maxPhase);
+		}
+		// genoType
+		final List<IntegerChromosome> lic = maxPhaseList.stream().map((integer) -> IntegerChromosome.of(0, integer, 1))
+				.collect(Collectors.toList());
+		final Genotype<IntegerGene> gt = Genotype.of(lic);
+
+		// IntegerChromosome
+		// IntegerChromosome integerChromosome = IntegerChromosome.of(genes);
+
+		final Fitness ff = new Fitness(dataSet, maxNodeNum);
+
+		final Engine<IntegerGene, Integer> engine = Engine.builder(ff, gt).populationSize(500)
+				.survivorsSelector(new TournamentSelector<>(3)).offspringSelector(new RouletteWheelSelector<>())
+				.alterers(new Mutator<>(0.5), new SinglePointCrossover<>(0.6)).build();
+		// Create evolution statistics consumer.
+		final Consumer<? super EvolutionResult<IntegerGene, Integer>> statistics = EvolutionStatistics.ofNumber();
+
+		final Phenotype<IntegerGene, Integer> best = engine.stream()
+				// Truncate the evolution stream after 7 "steady"
+				// generations.
+				.limit(bySteadyFitness(10))
+				// The evolution will stop after maximal 100
+				// generations.
+				.limit(100)
+				// Update the evaluation statistics after
+				// each generation
+				.peek(statistics)
+				// Collect (reduce) the evolution stream to
+				// its best phenotype.
+				.collect(toBestPhenotype());
+		Genotype<IntegerGene> res = best.getGenotype();
+
+		System.out.println(statistics);
+		// 检查结果
+		System.out.println("flowNum:\t" + flowNum);
+		System.out.println("topology:\t" + topoConfig);
+		System.out.println("grain:\t" + dataSet.getGrain());
+
+		int all = (topoConfig.get(0) - 1 + topoConfig.get(1) * topoConfig.get(0)) * dataSet.hyper / dataSet.unit;
+		System.out.println("all:\t" + all);
+		System.out.println("hyper:\t" + dataSet.hyper);
+		System.out.println(dataSet.getGrain() * 1.0 / all);
+		System.out.println("unit:\t" + dataSet.unit);
+		System.out.println("min slot:\t" + minBeSlot(dataSet));
+		System.out.println("max slot:\t" + (dataSet.hyper - 1));
+		System.out.println("be:\t" + beResev(dataSet, res));
+		System.out.println("vio:\t" + overlap(dataSet, res));
+	}
+
 }

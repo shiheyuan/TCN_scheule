@@ -17,7 +17,7 @@
  * Author:
  *    Franz Wilhelmstötter (franz.wilhelmstoetter@gmx.at)
  */
-package jenetics;
+package deprecate;
 
 import static org.jenetics.engine.EvolutionResult.toBestPhenotype;
 import static org.jenetics.engine.limit.bySteadyFitness;

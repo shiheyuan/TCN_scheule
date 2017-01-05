@@ -36,8 +36,13 @@ public class Dataflow {
 	public Dataflow(List<Integer> maxNodePerLev, int minPeriod, int maxPeriod) {
 		// 拓扑层数
 		Random random = new Random();
-		duration = 1;
+		// duration = 1;
 		period = (int) Math.pow(2, minPeriod + random.nextInt(maxPeriod - minPeriod));
+		// 确保通信时间小于通信周期
+		int maxDur = 1;
+		do {
+			duration = 1 + random.nextInt(maxDur);
+		} while (duration > period);
 		maxLaunch = period - duration;
 		// launch = random.nextInt(maxLaunch);
 		do {

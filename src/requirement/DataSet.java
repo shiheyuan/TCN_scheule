@@ -20,13 +20,19 @@ public class DataSet {
 		this.unit = FlowUtil.getUnit(dataflows);
 	}
 
-	public int getFrain() {
+	public int getGrain() {
+		int grain = 0;
+		for (Dataflow dataflow : dataflows) {
+			grain += (hyper / dataflow.period) * dataflow.duration / unit;
+		}
+		return grain;
+	}
+
+	public int getRawFrain() {
 		int frain = 0;
 		for (Dataflow dataflow : dataflows) {
 			frain += hyper / dataflow.period * dataflow.duration;
 		}
 		return frain;
-
 	}
-
 }

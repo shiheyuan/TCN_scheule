@@ -17,7 +17,7 @@
  * Author:
  *    Franz Wilhelmstötter (franz.wilhelmstoetter@gmx.at)
  */
-package jenetics;
+package deprecate;
 
 import static java.lang.Math.PI;
 import static java.lang.Math.abs;

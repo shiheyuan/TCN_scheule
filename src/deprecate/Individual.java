@@ -1,4 +1,4 @@
-package jenetics;
+package deprecate;
 
 import org.jenetics.IntegerChromosome;
 
