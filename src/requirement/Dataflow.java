@@ -13,10 +13,6 @@ import topology.Edge;
  */
 
 public class Dataflow {
-	@Override
-	public String toString() {
-		return "Dataflow [period=" + period + "]";
-	}
 
 	public List<Integer> sender = new ArrayList<>();
 	public List<Integer> receive = new ArrayList<>();
@@ -28,11 +24,22 @@ public class Dataflow {
 	// max slot
 	public int maxLaunch;
 
+	public Dataflow(List<Integer> sender, List<Integer> receive, List<Edge> edges, int duration, int period) {
+		super();
+		this.sender = sender;
+		this.receive = receive;
+		this.duration = duration;
+		this.period = period;
+		this.edges = edges;
+		maxLaunch = period - duration;
+	}
+
 	/**
 	 * 
 	 * @param maxNodePerLev
 	 *            各个level的最大节点数
 	 */
+
 	public Dataflow(List<Integer> maxNodePerLev, int minPeriod, int maxPeriod) {
 		// 拓扑层数
 		Random random = new Random();
@@ -41,14 +48,21 @@ public class Dataflow {
 		// 确保通信时间小于通信周期
 		int maxDur = 1;
 		do {
-			duration = 1 + random.nextInt(maxDur);
+			// duration = 1 + random.nextInt(maxDur);
+			duration = 1;
 		} while (duration > period);
 		maxLaunch = period - duration;
 		// launch = random.nextInt(maxLaunch);
 		do {
 			sender = initialNode(maxNodePerLev);
 			receive = initialNode(maxNodePerLev);
-		} while (sender.equals(receive) == true);
+		} while (sender.equals(receive) == true);// 收发节点不能为同一个
+	}
+
+	@Override
+	public String toString() {
+		return "Dataflow [sender=" + sender + ", receive=" + receive + ", duration=" + duration + ", period=" + period
+				+ ", maxLaunch=" + maxLaunch + "]";
 	}
 
 	public List<Boolean> getExist(int start, int hyper, int unit) {
@@ -64,9 +78,12 @@ public class Dataflow {
 		int startU = start / unit;
 
 		Boolean[] slot = new Boolean[slotNum];
+		for (Boolean boolean1 : slot) {
+			boolean1 = new Boolean(false);
+		}
 		for (int i = 0; i < times; i++) {
 			for (int j = 0; j < durationU; j++) {
-				slot[i * periodU + startU + j] = true;
+				slot[i * periodU + startU + j] = new Boolean(true);
 			}
 		}
 		// for (int i = 0; i < times; i++) {

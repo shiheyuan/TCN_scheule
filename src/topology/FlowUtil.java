@@ -7,6 +7,7 @@ import java.util.Map;
 
 import requirement.Dataflow;
 import requirement.DataflowSchedule;
+import requirement.Message;
 
 public class FlowUtil {
 
@@ -119,6 +120,50 @@ public class FlowUtil {
 	}
 
 	/**
+	 * 生成原始需求，然后幂次化周期与延迟，生成数据流序列
+	 * 
+	 * @param flowNum
+	 * @param topo
+	 * @return
+	 */
+	public static List<Dataflow> initialDataflows(int flowNum, List<Integer> topo) {
+		List<Message> messages = new ArrayList<>();
+		// 生成原始需求，消息长度为byte，延迟为ms
+		for (int i = 0; i < flowNum; i++) {
+			Message message = new Message(topo);
+			messages.add(message);
+		}
+		// 周期与延迟的2的幂次化
+		// 统计最大周期、最小延迟
+		double period_max = 0;
+		double duration_min = 1024;
+		for (Message message : messages) {
+			period_max = Math.max(period_max, message.period_ms);
+			duration_min = Math.min(duration_min, message.duration_ms);
+		}
+		// 归一化，最大周期时隙
+		int hyper_unity = (int) (Math.pow(2, (int) (Math.log(period_max / duration_min) / Math.log(2))));
+		// System.out.println(period_max);
+		// System.out.println(duration_min);
+		// System.out.println(hyper_unity);
+		// System.out.println("----------------");
+		// 生成归一化数据流
+		List<Dataflow> dataflows = new ArrayList<>();
+		for (Message message : messages) {
+			// System.out.println(message);
+			int period = (int) (message.period_ms * hyper_unity / period_max);
+			int delay = (int) Math.ceil((message.duration_ms / duration_min));
+			Dataflow dataflow = new Dataflow(message.src, message.dst, message.route, delay, period);
+			dataflows.add(dataflow);
+			// System.out.println(message);
+			// System.out.println(dataflow);
+			// System.out.println();
+		}
+		return dataflows;
+
+	}
+
+	/**
 	 * 两个节点之间的路由路径
 	 * 
 	 * @param src
@@ -174,7 +219,6 @@ public class FlowUtil {
 		}
 
 		return edges;
-
 	}
 
 	/**
